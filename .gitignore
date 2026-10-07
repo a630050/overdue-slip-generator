@@ -1,0 +1,5 @@
+# 清冊與輸出含學生個資，禁止上傳
+*.xls
+*.xlsx
+*.pdf
+*.backup*.html
