@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>借書逾期通知單產生器</title>
+<title>書籍催還通知單產生器</title>
 <style>
 * { box-sizing: border-box; }
 body { margin:0; font-family: "Microsoft JhengHei","PingFang TC","Noto Sans TC",sans-serif; background:#eef0f3; color:#111; }
@@ -11,6 +11,7 @@ body { margin:0; font-family: "Microsoft JhengHei","PingFang TC","Noto Sans TC",
 #bar button, #bar label.btn { background:#2457c5; color:#fff; border:0; border-radius:6px; padding:8px 16px; font-size:15px; cursor:pointer; }
 #bar button:disabled { background:#9aa; cursor:default; }
 #bar input[type=file] { display:none; }
+#bar label.btn.sub { background:#fff; color:#2457c5; border:1px solid #2457c5; }
 #drop:hover, #drop.over { border-color:#2457c5; background:#f2f6ff; color:#2457c5; }
 #info { font-size:14px; color:#444; }
 #drop { cursor:pointer; margin:40px auto; max-width:560px; border:2px dashed #99a; border-radius:12px; padding:48px 20px; text-align:center; color:#667; background:#fff; }
@@ -90,16 +91,31 @@ body.previewing #main { display:none; }
   .sheet { margin:0; box-shadow:none; }
   .sheet:last-child { break-after:auto; page-break-after:auto; }
 }
+
+/* ---- 使用說明 ---- */
+#helpBtn { margin-left:auto; width:34px; height:34px; border-radius:50%; background:#fff !important; color:#2457c5 !important; border:2px solid #2457c5 !important; font-size:18px; font-weight:bold; padding:0 !important; line-height:1; cursor:pointer; }
+#helpBtn:hover { background:#2457c5 !important; color:#fff !important; }
+#helpMask { display:none; position:fixed; inset:0; z-index:50; background:#0007; align-items:center; justify-content:center; padding:16px; }
+#helpMask.on { display:flex; }
+#helpBox { background:#fff; border-radius:12px; width:min(720px,100%); max-height:88vh; overflow:auto; padding:22px 26px 20px; box-shadow:0 8px 30px #0006; font-size:15px; line-height:1.65; color:#222; }
+#helpBox h2 { margin:0 0 6px; font-size:20px; }
+#helpBox h3 { margin:16px 0 4px; font-size:16px; color:#2457c5; }
+#helpBox ul, #helpBox ol { margin:4px 0; padding-left:22px; }
+#helpBox .tip { background:#f2f6ff; border-left:4px solid #2457c5; padding:6px 12px; margin:8px 0; border-radius:4px; }
+#helpBox .close { float:right; background:#2457c5; color:#fff; border:0; border-radius:6px; padding:6px 16px; font-size:14px; cursor:pointer; }
+@media print { #helpMask, #helpBtn { display:none !important; } }
 </style>
 <style id="pagecss"></style>
 </head>
 <body>
 <div id="main">
 <div id="bar">
-  <label class="btn">選擇 XLS / XLSX 檔<input id="file" type="file" accept=".xls,.xlsx"></label>
+  <label class="btn">選擇 XLS / XLSX 檔（可多選）<input id="file" type="file" accept=".xls,.xlsx" multiple></label>
+  <label class="btn sub" id="addLbl" style="display:none">＋ 加入更多檔案<input id="fileAdd" type="file" accept=".xls,.xlsx" multiple></label>
   <button id="btnOfficer" class="out" disabled>館員版催書單</button>
   <button id="btnStudent" class="out" disabled>學生版催書單</button>
-  <span id="info">請上傳「借書逾期清單」或「逾期通知單-班級」Excel 檔（也可直接拖曳到頁面）</span>
+  <span id="info">請上傳「借書逾期清單」、「逾期通知單-班級」或「預先還書清冊」Excel 檔，可一次選多個（也可直接拖曳到頁面）</span>
+  <button id="helpBtn" type="button" title="使用說明" aria-label="使用說明">?</button>
 </div>
 <div id="settings">
   <div class="row"><b>通知單設定</b>
@@ -122,8 +138,56 @@ body.previewing #main { display:none; }
     <li>查詢期間請勿關閉那個圖書館視窗。資料只在你的瀏覽器與圖書館網站之間傳遞。</li>
     <li>若書籤列沒顯示：按「複製書籤程式碼」，新增一個書籤，把網址欄貼上程式碼即可。</li></ol></details>
 </div>
-<div id="drop" tabindex="0" role="button">點擊此處選擇檔案，或把 Excel 檔拖曳到這裡<br><small>檔案只在你的瀏覽器處理，不會上傳</small></div>
+<div id="drop" tabindex="0" role="button">點擊此處選擇檔案（可多選），或把 Excel 檔拖曳到這裡<br><small>檔案只在你的瀏覽器處理，不會上傳</small></div>
 <footer id="credit">程式設計：徐承佑</footer>
+</div>
+
+<div id="helpMask" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
+ <div id="helpBox">
+  <button class="close" id="helpClose" type="button">關閉</button>
+  <h2 id="helpTitle">使用說明</h2>
+  <div>把巨耀圖書館系統匯出的報表上傳，自動整理成每位讀者一張的「書籍催還通知單」。</div>
+
+  <h3>① 先從巨耀系統產出報表（Excel 檔）</h3>
+  <ul>
+   <li><b>借書逾期通知單</b>：已經逾期未還的書。</li>
+   <li><b>單位預先還書通知單</b>：快到期（或尚未歸還）的書，用來提前提醒。</li>
+   <li>兩種報表都請匯出成 Excel（.xls 或 .xlsx）。</li>
+  </ul>
+
+  <h3>② 上傳檔案</h3>
+  <ul>
+   <li>可只傳其中一個，也可<b>兩個同時上傳</b>：在選擇檔案視窗按住 Ctrl 多選，或直接把檔案拖曳進頁面。</li>
+   <li>已經載入後，還想補檔案，按「＋ 加入更多檔案」。</li>
+   <li>系統會<b>自動辨識</b>報表種類與內容，不需要自己選。</li>
+   <li><b>自動整併</b>：同一位讀者（讀者編號相同）的書，不論逾期或未到期，都會放在同一張「書籍催還通知單」。</li>
+   <li>請使用<b>同一所學校</b>的報表；不同學校的讀者編號可能重複，會被誤併。</li>
+  </ul>
+
+  <h3>③ 設定與輸出</h3>
+  <ul>
+   <li><b>通知單設定</b>：可修改學校名稱，以及學生版底部的聯絡資訊（會自動記住）。</li>
+   <li><b>館員版催書單</b>：A4 直式，每個班級一張（或數頁），列出全班的書單，方便館員核對。</li>
+   <li><b>學生版催書單</b>：A4 橫式，一頁 4 張小單，每位讀者每 3 本書一張，沿框線剪開發給學生。</li>
+   <li>按「列印」時請選 A4、縮放 100%；學生版選橫式。也可以選「另存成 PDF」。</li>
+  </ul>
+
+  <h3>④ 逾期天數怎麼看</h3>
+  <ul>
+   <li><b>正數</b>（紅字）：已逾期的天數。</li>
+   <li><b>負數</b>：還沒到期，例如 −5 代表 5 天後到期。</li>
+   <li>預先還書通知單的天數，是用報表上的「列印日期」減「應還日期」自動計算。</li>
+  </ul>
+
+  <h3>⑤ 排架號、索書號、金額查詢（選用）</h3>
+  <ul>
+   <li>貼上學校圖書館網址（含 schNo=數字），按「查排架號」，再到開啟的圖書館網頁點書籤列的「📚 查排架號」。</li>
+   <li>完成後通知單會多出排架號與金額；報表本身沒有索書號的書（例如預先還書通知單），也會一併補上索書號。查不到的會標「查無」，請人工補。</li>
+   <li>詳細步驟在頁面上的「排架號查詢」→「使用步驟與說明」。</li>
+  </ul>
+
+  <div class="tip">🔒 檔案只在你的瀏覽器內處理，不會上傳到任何伺服器。報表含學生姓名與讀者編號，請妥善保管列印出來的通知單。</div>
+ </div>
 </div>
 <div id="pview">
   <div id="pbar">
@@ -238,7 +302,70 @@ function parseBlocks(rows){
   if (!map.size) throw new Error('找不到資料列（需有「單位(班級)、座號、姓名、讀者編號、登錄號…」）');
   return {school,code,pdate,ptime,people:[...map.values()],format:'逾期通知單-班級'};
 }
+
+/* ===== 匯入格式 C：「預先還書清冊」（E0169R1，尚未逾期的提醒）=====
+   依班級分區塊：「讀者單位：401.四年和班」，欄位為 讀者條碼號/讀者姓名/應還日期/借閱日期/登錄號/書名/作者。
+   日期是 20261028 格式；沒有座號、索書號、逾期天數。逾期天數 = 列印日期 − 應還日期（未到期為負數）。 */
+const roc8 = v => { const s=String(v||'').trim(); return /^\d{8}$/.test(s) ? `${+s.slice(0,4)-1911}/${s.slice(4,6)}/${s.slice(6,8)}` : s; };
+const rocMs = s => { const m=String(s||'').match(/(\d+)\D+(\d+)\D+(\d+)/); return m ? Date.UTC(+m[1]+1911,+m[2]-1,+m[3]) : NaN; };
+const daysLate = (pdate,due) => { const a=rocMs(pdate), b=rocMs(due); return isNaN(a)||isNaN(b) ? '' : String(Math.round((a-b)/86400000)); };
+function isPreFormat(rows){
+  return rows.some(r=>r.some(c=>{ const k=nospace(clean(c)); return /^讀者單位/.test(k) || /預先還書/.test(k); }));
+}
+function parsePre(rows){
+  let school='', code='', pdate='', cls='', col=null;
+  const map = new Map(), recs=[];
+  for (const raw of rows){
+    const cells = raw.map(clean), keys = cells.map(nospace), txt = cells.filter(Boolean);
+    if (!txt.length) continue;
+    const ui = keys.findIndex(k=>/^讀者單位/.test(k));
+    if (ui>=0){ cls = cells.slice(ui+1).find(Boolean) || ''; if (cls==='無資料') cls=''; continue; }
+    if (keys.includes('讀者條碼號') && keys.includes('登錄號')){
+      col = {};
+      keys.forEach((k,i)=>{ if(k==='讀者條碼號') col.rid=i; else if(k==='讀者姓名') col.name=i; else if(k==='應還日期') col.due=i;
+        else if(k==='借閱日期') col.out=i; else if(k==='登錄號') col.acc=i; else if(k==='書名') col.book=i; });
+      continue;
+    }
+    for (const tx of txt){
+      if (/^E\d+R?\d*$/i.test(tx)) code=tx;
+      else if (tx.includes('列印日期')) pdate=tx.split(/[：:]/)[1]?.trim()||pdate;
+      else if (!school && /學|館/.test(tx) && !/通知單|清單|清冊|預先/.test(nospace(tx))) school=tx.replace(/ +/g,' ');
+    }
+    if (!col) continue;
+    const rid=cells[col.rid], acc=cells[col.acc];
+    if (!rid || !acc || nospace(rid)==='讀者條碼號') continue;                             // 頁尾、空列
+    recs.push({cls,rid,name:cells[col.name]||'',acc,book:cells[col.book]||'',out:roc8(cells[col.out]),due:roc8(cells[col.due])});
+  }
+  if (!recs.length) throw new Error('找不到資料列（需有「讀者條碼號、讀者姓名、應還日期、登錄號、書名」）');
+  recs.forEach(r=>{
+    if (!map.has(r.rid)) map.set(r.rid,{rid:r.rid,cls:r.cls,seat:'',name:r.name,books:[]});
+    map.get(r.rid).books.push({acc:r.acc,call:'',book:r.book,out:r.out,due:r.due,days:daysLate(pdate,r.due)});
+  });
+  return {school,code,pdate,ptime:'',people:[...map.values()],format:'預先還書清冊'};
+}
+/* 多個檔案合併：同一位讀者（讀者編號相同）的書不論逾期或未到期，放在同一張通知單 */
+function mergeData(list){
+  const map = new Map(), seenBook = new Set(), fm=[];
+  let school='', code='', pdate='', ptime='';
+  list.forEach(d=>{
+    if(!school) school=d.school;
+    if(!code) code=d.code;
+    if(d.pdate && (!pdate || rocMs(d.pdate)>=rocMs(pdate))){ pdate=d.pdate; ptime=d.ptime||ptime; }
+    if(d.format && !fm.includes(d.format)) fm.push(d.format);
+    d.people.forEach(p=>{
+      let q = map.get(p.rid);
+      if(!q){ q={rid:p.rid,cls:p.cls,seat:p.seat,name:p.name,books:[]}; map.set(p.rid,q); }
+      else { if(!q.cls) q.cls=p.cls; if(!q.seat) q.seat=p.seat; if(!q.name) q.name=p.name; }
+      p.books.forEach(b=>{ const k=p.rid+'|'+b.acc+'|'+b.due; if(b.acc && seenBook.has(k)) return; seenBook.add(k); q.books.push(b); });
+    });
+  });
+  const people=[...map.values()];
+  people.forEach(p=>p.books.sort((a,b)=>(parseInt(b.days)||0)-(parseInt(a.days)||0)));   // 逾期天數多的在前：逾期在前、未到期在後
+  return {school,code,pdate,ptime,people,format:fm.join('＋')};
+}
+const isLate = b => { const n=parseInt(b.days); return isNaN(n) || n>0; };      // 沒有逾期天數資料的舊格式視為已逾期
 function parseAny(rows){
+  if (isPreFormat(rows)) return parsePre(rows);
   if (isBlockFormat(rows)) return parseBlocks(rows);
   const d = parse(rows); d.format='借書逾期清單'; return d;
 }
@@ -253,26 +380,25 @@ function priceTd(d,b){ return `<td class="c">${d.shelfOn && b.price ? esc(b.pric
 function groupByClass(d){
   const g = new Map();
   d.people.forEach(p=>{ const k=p.cls||''; if(!g.has(k)) g.set(k,[]); p.books.forEach(b=>g.get(k).push({p,b})); });
-  g.forEach(rows=>rows.sort((x,y)=>(parseInt(x.p.seat)||0)-(parseInt(y.p.seat)||0) || String(x.p.rid).localeCompare(String(y.p.rid))));
+  g.forEach(rows=>rows.sort((x,y)=>String(x.p.rid).localeCompare(String(y.p.rid),'zh-Hant',{numeric:true})));   // 同班依讀者編號排序
   return g;
 }
 function classPage(d, cls, rows){
   const pdate = dash(d.pdate) || rocToday();
   const body = rows.map(({p,b})=>`<tr>
-    <td>${p.seat?esc(p.seat)+'號':''}（${esc(p.rid)}）<br>${esc(p.name||'')}</td>
+    <td>${esc(p.rid)}<br>${esc(p.name||'')}</td>
     <td class="c">${esc(b.acc||'')}</td><td>${esc(b.book||'')}</td>
     <td class="sm">${callTd(b.call,b.vol)}</td>${d.shelfOn?shelfTd(b):'<td class="sh"></td>'}${priceTd(d,b)}
     ${hasOut(d)?`<td class="dt">${esc(dash(b.out))}</td>`:''}<td class="dt">${esc(dash(b.due))}</td><td class="red">${esc(b.days||'')}</td></tr>`).join('');
   return `<section class="cls"><div class="rule"></div>
-  <h1>${esc(schoolName(d))} 逾期書籍催還通知單</h1>
-  <div class="meta"><span>單位：${esc(cls)}</span><span>列印時間：${esc(pdate)}</span></div>
-  <p class="note">下列書籍已於 ${esc(pdate)} 逾期，若已歸還書籍者，請與「圖書館」確認書籍是否已確實歸還。</p>
+  <h1>${esc(schoolName(d))} 書籍催還通知單</h1>
+  <div class="meta"><span>單位：${esc(cls||'其他讀者')}</span><span>列印時間：${esc(pdate)}</span></div>
   <table><colgroup><col style="width:27mm"><col style="width:20mm"><col><col style="width:15mm"><col style="width:13mm"><col style="width:12mm">${hasOut(d)?'<col style="width:20mm">':''}<col style="width:20mm"><col style="width:17mm"></colgroup>
-  <thead><tr><th>職稱/座號 姓名</th><th>館藏登錄號</th><th>書名</th><th>索書</th><th>排架</th><th>金額</th>${hasOut(d)?'<th>借閱日期</th>':''}<th>應還日期</th><th>逾期天數</th></tr></thead>
+  <thead><tr><th>讀者編號 姓名</th><th>館藏登錄號</th><th>書名</th><th>索書</th><th>排架</th><th>金額</th>${hasOut(d)?'<th>借閱日期</th>':''}<th>應還日期</th><th>逾期天數</th></tr></thead>
   <tbody>${body}</tbody></table></section>`;
 }
 
-let cur=null;
+let cur=null, parsedList=[], fileNames=[];
 
 /* ===== 設定（自動記住）===== */
 const store = { get(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }, set(k,v){ try{ localStorage.setItem(k,v); }catch(e){} } };
@@ -287,12 +413,12 @@ $('#setSchool').oninput = () => { if(!cur) return; const m=schoolMap(); const v=
 $('#setContact').oninput = () => store.set('ydContact', $('#setContact').value.trim());
 
 function updateInfo(){
-  const d=cur, groups=groupByClass(d), n=d.people.reduce((a,p)=>a+p.books.length,0);
-  $('#info').textContent = `共 ${groups.size} 個班級、${d.people.length} 位學生、${n} 本逾期書（讀入格式：${d.format||''}）。請選擇輸出版本預覽與列印。`;
+  const d=cur, groups=groupByClass(d), all=d.people.flatMap(p=>p.books), late=all.filter(isLate).length;
+  $('#info').textContent = `共 ${groups.size} 個班級、${d.people.length} 位讀者、${all.length} 本書（${late} 本已逾期、${all.length-late} 本未到期）。讀入：${fileNames.join('、')}（${d.format||''}）。請選擇輸出版本預覽與列印。`;
 }
 function render(d) {
   cur=d;
-  $('#drop').style.display='none';
+  $('#drop').style.display='none'; $('#addLbl').style.display='';
   $('#btnOfficer').disabled=false; $('#btnStudent').disabled=false;
   $('#shelf').style.display='block'; $('#shelfGo').disabled=false; $('#settings').style.display='block';
   loadSettings(d); updateInfo();
@@ -302,9 +428,8 @@ function render(d) {
 const stripCode = c => String(c||'').replace(/^\d+\./,'');
 function slipHtml(d, cls, p, books, pdate){
   const body = books.map(b=>`<tr><td>${esc(b.acc||'')}</td><td>${esc(b.book||'')}</td><td class="sm">${callTd(b.call,b.vol)}</td>${d.shelfOn?shelfTd(b):'<td class="sh"></td>'}${priceTd(d,b)}${hasOut(d)?`<td class="dt">${esc(dash(b.out))}</td>`:''}<td class="dt">${esc(dash(b.due))}</td><td class="red">${esc(b.days||'')}</td></tr>`).join('');
-  return `<div class="ss"><h1>${esc(schoolName(d))} 逾期書籍催還通知單</h1>
-  <div class="meta"><span>單位：${esc(stripCode(cls))}（${esc(p.rid)}）　姓名：${esc(p.name||'')}</span><span>列印時間：${esc(pdate)}</span></div>
-  <div class="note">下列書籍已於 ${esc(pdate)} 逾期</div>
+  return `<div class="ss"><h1>${esc(schoolName(d))} 書籍催還通知單</h1>
+  <div class="meta"><span>${stripCode(cls)?`單位：${esc(stripCode(cls))}（${esc(p.rid)}）`:`讀者編號：${esc(p.rid)}`}　姓名：${esc(p.name||'')}</span><span>列印時間：${esc(pdate)}</span></div>
   <table><colgroup><col style="width:19mm"><col><col style="width:14mm"><col style="width:11mm"><col style="width:11mm">${hasOut(d)?'<col style="width:18mm">':''}<col style="width:18mm"><col style="width:13mm"></colgroup>
   <thead><tr><th>館藏登錄號</th><th>書名</th><th>索書</th><th>排架</th><th>金額</th>${hasOut(d)?'<th>借閱日期</th>':''}<th>應還日期</th><th>逾期天數</th></tr></thead>
   <tbody>${body}</tbody></table>
@@ -321,7 +446,7 @@ function studentPages(d){
 }
 
 /* ===== 預覽 ===== */
-let printPrefix = '逾期通知單_';
+let printPrefix = '催還通知單_';
 function openPreview(kind){
   if(!cur) return;
   if(kind==='officer'){
@@ -329,20 +454,20 @@ function openPreview(kind){
     $('#sheet').innerHTML = [...groups].map(([c,rows])=>classPage(cur,c,rows)).join('');
     $('#pagecss').textContent = '@page { size: A4; margin: 8mm 10mm; }';
     $('#plabel').textContent = `館員版催書單預覽：${groups.size} 個班級，每班一張（A4 直式）。列印請選 A4、縮放 100%。`;
-    printPrefix = '逾期通知單_';
+    printPrefix = '催還通知單_';
   } else {
     const r = studentPages(cur);
     $('#sheet').innerHTML = r.html;
     $('#pagecss').textContent = '@page { size: A4 landscape; margin: 6mm; }';
     $('#plabel').textContent = `學生版催書單預覽：${r.slips} 張小單、${r.pages} 頁（A4 橫式，一頁 4 張，沿框線裁剪）。列印請選 A4 橫式、縮放 100%。`;
-    printPrefix = '學生催書單_';
+    printPrefix = '學生催還單_';
   }
   document.body.classList.add('previewing'); scrollTo(0,0);
 }
 function closePreview(){ document.body.classList.remove('previewing'); $('#sheet').innerHTML=''; $('#pagecss').textContent=''; scrollTo(0,0); }
 // 預覽用：依 A4 可用高度把通知單分頁（列印時由瀏覽器依 break-inside 換頁）
 function paginate(){}
-window.renderFromRows = rows => render(parseAny(rows));
+window.renderFromRows = rows => { parsedList=[parseAny(rows)]; fileNames=['(測試)']; render(mergeData(parsedList)); };
 
 /* ===== 排架號查詢（書籤小工具 + postMessage） ===== */
 const shelfOf = u => { if(!u) return null; const t=String(u).split('/'); return t.length>1 ? t[t.length-1].trim() : ''; };
@@ -391,7 +516,7 @@ function shelfBookmarklet(){
         for(var i=0;i<rows.length && n>0;i++){
           seen[rows[i].id]=1;
           var bk, items; try{ bk=await getH(rows[i].id); items=bk.rows; }catch(e){ continue; }
-          for(var k=0;k<items.length;k++){ var it=items[k]; if(left[it.itemNo]){ delete left[it.itemNo]; n--; send({t:'res',acc:it.itemNo,unit:it.itemUnit||'',price:bk.price,vol:it.volumeNo||''}); } }
+          for(var k=0;k<items.length;k++){ var it=items[k]; if(left[it.itemNo]){ delete left[it.itemNo]; n--; send({t:'res',acc:it.itemNo,unit:it.itemUnit||'',price:bk.price,vol:it.volumeNo||'',call:rows[i].sortn?(rows[i].sortn+'/'+(rows[i].authno||'')):''}); } }
         }
         if(!j.total || pg>=j.total) break;
       }
@@ -435,7 +560,7 @@ $('#shelfGo').onclick = () => {
   const seen=new Set(), uniq=jobs.filter(j=>!seen.has(j.acc)&&seen.add(j.acc));
   const win=window.open(u.origin+u.pathname+'?schNo='+encodeURIComponent(sch),'ydShelfWin');
   if(!win) return setMsg('瀏覽器擋住了跳出視窗，請允許本頁的跳出視窗後再按一次。','err');
-  cur.people.forEach(p=>p.books.forEach(b=>{ delete b.shelf; delete b.price; delete b.vol; }));
+  cur.people.forEach(p=>p.books.forEach(b=>{ delete b.shelf; delete b.price; delete b.vol; if(b.callFromLib){ b.call=''; delete b.callFromLib; } }));
   lookup={win,origin:u.origin,jobs:uniq,got:0,miss:0};
   setMsg('圖書館網頁已開啟 → 請在那個頁面點書籤列的「📚 查排架號」','');
 };
@@ -444,7 +569,7 @@ addEventListener('message',e=>{
   if(!lookup || e.source!==lookup.win || e.origin!==lookup.origin || !m || m.ns!=='ydshelf') return;
   if(m.t==='hello'){ e.source.postMessage({ns:'ydshelf',t:'jobs',jobs:lookup.jobs},e.origin); setMsg(`已傳送 ${lookup.jobs.length} 本書的清單，查詢中…`,''); }
   else if(m.t==='res'){
-    cur.people.forEach(p=>p.books.forEach(b=>{ if(b.acc===m.acc){ b.shelf = m.unit===null ? null : shelfOf(m.unit); b.price = m.price||''; b.vol = m.vol||''; } }));
+    cur.people.forEach(p=>p.books.forEach(b=>{ if(b.acc===m.acc){ b.shelf = m.unit===null ? null : shelfOf(m.unit); b.price = m.price||''; b.vol = m.vol||''; if(!b.call && m.call){ b.call = m.call; b.callFromLib = true; } } }));
     m.unit===null ? lookup.miss++ : lookup.got++;
     setMsg(`查詢中：找到 ${lookup.got}、查無 ${lookup.miss} / ${lookup.jobs.length}`,'');
   }
@@ -455,14 +580,24 @@ addEventListener('message',e=>{
   }
 });
 
-async function load(f){
-  try{
-    const wb = XLSX.read(await f.arrayBuffer(),{type:'array'});
-    const ws = wb.Sheets[wb.SheetNames[0]];
-    render(parseAny(XLSX.utils.sheet_to_json(ws,{header:1,defval:'',raw:false})));
-  }catch(e){ $('#info').textContent='讀取失敗：'+e.message; }
+async function load(files, append){
+  files = [...files].filter(f=>/\.xlsx?$/i.test(f.name));
+  if(!files.length) return;
+  const list = append ? parsedList.slice() : [], names = append ? fileNames.slice() : [], errs=[];
+  for (const f of files){
+    try{
+      const wb = XLSX.read(await f.arrayBuffer(),{type:'array'});
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      list.push(parseAny(XLSX.utils.sheet_to_json(ws,{header:1,defval:'',raw:false}))); names.push(f.name);
+    }catch(e){ errs.push(f.name+'：'+e.message); }
+  }
+  if(!list.length){ $('#info').textContent='讀取失敗：'+errs.join('；'); return; }
+  parsedList=list; fileNames=names; render(mergeData(list));
+  if(errs.length) $('#info').textContent += '　（無法讀取：'+errs.join('；')+'）';
 }
-$('#file').onchange = e => e.target.files[0] && load(e.target.files[0]);
+$('#file').onchange = e => load(e.target.files,false);
+$('#fileAdd').onchange = e => load(e.target.files,true);
+$('#fileAdd').onclick = e => { e.target.value=''; };
 // 另存 PDF 的預設檔名取自網頁標題：列印時改成「逾期通知單_年月日時分秒」，列印完還原
 const baseTitle = document.title;
 addEventListener('beforeprint', () => {
@@ -478,7 +613,13 @@ $('#drop').onclick = () => $('#file').click();
 $('#drop').onkeydown = e => (e.key==='Enter'||e.key===' ') && (e.preventDefault(), $('#file').click());
 $('#file').onclick = e => { e.target.value=''; };
 addEventListener('dragover',e=>e.preventDefault());
-addEventListener('drop',e=>{e.preventDefault(); e.dataTransfer.files[0] && load(e.dataTransfer.files[0]);});
+addEventListener('drop',e=>{e.preventDefault(); e.dataTransfer.files.length && load(e.dataTransfer.files,false);});
+
+const helpOpen = on => { $('#helpMask').classList.toggle('on', on); if(on) $('#helpClose').focus(); };
+$('#helpBtn').onclick = () => helpOpen(true);
+$('#helpClose').onclick = () => helpOpen(false);
+$('#helpMask').onclick = e => { if(e.target.id==='helpMask') helpOpen(false); };
+addEventListener('keydown', e => { if(e.key==='Escape') helpOpen(false); });
 </script>
 </body>
 </html>
