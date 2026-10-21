@@ -101,6 +101,8 @@ body.previewing #main { display:none; }
 #helpBox h2 { margin:0 0 6px; font-size:20px; }
 #helpBox h3 { margin:16px 0 4px; font-size:16px; color:#2457c5; }
 #helpBox ul, #helpBox ol { margin:4px 0; padding-left:22px; }
+#helpBox .vid { position:relative; width:100%; aspect-ratio:16/9; background:#000; border-radius:8px; overflow:hidden; }
+#helpBox .vid iframe { position:absolute; inset:0; width:100%; height:100%; border:0; }
 #helpBox .tip { background:#f2f6ff; border-left:4px solid #2457c5; padding:6px 12px; margin:8px 0; border-radius:4px; }
 #helpBox .close { float:right; background:#2457c5; color:#fff; border:0; border-radius:6px; padding:6px 16px; font-size:14px; cursor:pointer; }
 @media print { #helpMask, #helpBtn { display:none !important; } }
@@ -147,6 +149,10 @@ body.previewing #main { display:none; }
   <button class="close" id="helpClose" type="button">關閉</button>
   <h2 id="helpTitle">使用說明</h2>
   <div>把巨耀圖書館系統匯出的報表上傳，自動整理成每位讀者一張的「書籍催還通知單」。</div>
+
+  <h3>🎬 影片教學</h3>
+  <div class="vid"><iframe id="helpVideo" title="使用教學影片" data-src="https://www.youtube-nocookie.com/embed/WczofNo0PJw" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe></div>
+  <div style="margin-top:4px;font-size:14px">影片無法播放？<a href="https://www.youtube.com/watch?v=WczofNo0PJw" target="_blank" rel="noopener">在 YouTube 開啟</a></div>
 
   <h3>① 先從巨耀系統產出報表（Excel 檔）</h3>
   <ul>
@@ -615,7 +621,12 @@ $('#file').onclick = e => { e.target.value=''; };
 addEventListener('dragover',e=>e.preventDefault());
 addEventListener('drop',e=>{e.preventDefault(); e.dataTransfer.files.length && load(e.dataTransfer.files,false);});
 
-const helpOpen = on => { $('#helpMask').classList.toggle('on', on); if(on) $('#helpClose').focus(); };
+const helpOpen = on => {
+  $('#helpMask').classList.toggle('on', on);
+  const v = $('#helpVideo');
+  if (on) { if (!v.src || v.src==='about:blank') v.src = v.dataset.src; $('#helpClose').focus(); }   // 開啟時才載入影片
+  else v.src = 'about:blank';                                                                      // 關閉時停止播放
+};
 $('#helpBtn').onclick = () => helpOpen(true);
 $('#helpClose').onclick = () => helpOpen(false);
 $('#helpMask').onclick = e => { if(e.target.id==='helpMask') helpOpen(false); };
