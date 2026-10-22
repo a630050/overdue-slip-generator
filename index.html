@@ -53,6 +53,8 @@ body { margin:0; font-family: "Microsoft JhengHei","PingFang TC","Noto Sans TC",
   .cls { width:auto; margin:0; padding:0; box-shadow:none; }
   .cls:last-child { break-after:auto; page-break-after:auto; }
 }
+.cls tr.late td, .ss tr.late td { color:#d00000; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+.cls tr.late td { background:#fff0f0; } .ss tr.late td { background:#fff0f0; }
 #credit { text-align:center; color:#667; font-size:13px; padding:18px 0 28px; }
 
 /* ---- 主畫面 / 預覽畫面切換 ---- */
@@ -369,6 +371,7 @@ function mergeData(list){
   people.forEach(p=>p.books.sort((a,b)=>(parseInt(b.days)||0)-(parseInt(a.days)||0)));   // 逾期天數多的在前：逾期在前、未到期在後
   return {school,code,pdate,ptime,people,format:fm.join('＋')};
 }
+const isOver = b => parseInt(b.days) > 0;      // 逾期天數為正數：整列標紅
 const isLate = b => { const n=parseInt(b.days); return isNaN(n) || n>0; };      // 沒有逾期天數資料的舊格式視為已逾期
 function parseAny(rows){
   if (isPreFormat(rows)) return parsePre(rows);
@@ -391,11 +394,11 @@ function groupByClass(d){
 }
 function classPage(d, cls, rows){
   const pdate = dash(d.pdate) || rocToday();
-  const body = rows.map(({p,b})=>`<tr>
+  const body = rows.map(({p,b})=>`<tr${isOver(b)?' class="late"':''}>
     <td>${esc(p.rid)}<br>${esc(p.name||'')}</td>
     <td class="c">${esc(b.acc||'')}</td><td>${esc(b.book||'')}</td>
     <td class="sm">${callTd(b.call,b.vol)}</td>${d.shelfOn?shelfTd(b):'<td class="sh"></td>'}${priceTd(d,b)}
-    ${hasOut(d)?`<td class="dt">${esc(dash(b.out))}</td>`:''}<td class="dt">${esc(dash(b.due))}</td><td class="red">${esc(b.days||'')}</td></tr>`).join('');
+    ${hasOut(d)?`<td class="dt">${esc(dash(b.out))}</td>`:''}<td class="dt">${esc(dash(b.due))}</td><td class="${isOver(b)?'red':'c'}">${esc(b.days||'')}</td></tr>`).join('');
   return `<section class="cls"><div class="rule"></div>
   <h1>${esc(schoolName(d))} 書籍催還通知單</h1>
   <div class="meta"><span>單位：${esc(cls||'其他讀者')}</span><span>列印時間：${esc(pdate)}</span></div>
@@ -433,7 +436,7 @@ function render(d) {
 /* ===== 學生版：一位學生每 3 本一張小單，A4 橫式一頁 4 張 ===== */
 const stripCode = c => String(c||'').replace(/^\d+\./,'');
 function slipHtml(d, cls, p, books, pdate){
-  const body = books.map(b=>`<tr><td>${esc(b.acc||'')}</td><td>${esc(b.book||'')}</td><td class="sm">${callTd(b.call,b.vol)}</td>${d.shelfOn?shelfTd(b):'<td class="sh"></td>'}${priceTd(d,b)}${hasOut(d)?`<td class="dt">${esc(dash(b.out))}</td>`:''}<td class="dt">${esc(dash(b.due))}</td><td class="red">${esc(b.days||'')}</td></tr>`).join('');
+  const body = books.map(b=>`<tr${isOver(b)?' class="late"':''}><td>${esc(b.acc||'')}</td><td>${esc(b.book||'')}</td><td class="sm">${callTd(b.call,b.vol)}</td>${d.shelfOn?shelfTd(b):'<td class="sh"></td>'}${priceTd(d,b)}${hasOut(d)?`<td class="dt">${esc(dash(b.out))}</td>`:''}<td class="dt">${esc(dash(b.due))}</td><td class="${isOver(b)?'red':'c'}">${esc(b.days||'')}</td></tr>`).join('');
   return `<div class="ss"><h1>${esc(schoolName(d))} 書籍催還通知單</h1>
   <div class="meta"><span>${stripCode(cls)?`單位：${esc(stripCode(cls))}（${esc(p.rid)}）`:`讀者編號：${esc(p.rid)}`}　姓名：${esc(p.name||'')}</span><span>列印時間：${esc(pdate)}</span></div>
   <table><colgroup><col style="width:19mm"><col><col style="width:14mm"><col style="width:11mm"><col style="width:11mm">${hasOut(d)?'<col style="width:18mm">':''}<col style="width:18mm"><col style="width:13mm"></colgroup>
