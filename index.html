@@ -54,6 +54,7 @@ body { margin:0; font-family: "Microsoft JhengHei","PingFang TC","Noto Sans TC",
   .cls:last-child { break-after:auto; page-break-after:auto; }
 }
 body:not(.redLate) .cls td.red, body:not(.redLate) .ss td.red { color:#000; }   /* 未勾選「逾期列紅字提醒」：全部黑字 */
+body.redLate.redBg .cls tr.late td, body.redLate.redBg .ss tr.late td { background:#fff0f0; }
 body.redLate .cls tr.late td, body.redLate .ss tr.late td { color:#d00000; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
 #credit { text-align:center; color:#667; font-size:13px; padding:18px 0 28px; }
 
@@ -125,7 +126,7 @@ body.previewing #main { display:none; }
   <div class="row"><b>通知單設定</b>
     <label>學校名稱 <input id="setSchool" type="text" placeholder="預設取自清冊上的學校名稱"></label>
     <label>聯絡資訊（學生版底部） <input id="setContact" type="text" placeholder="若對上述資料有疑慮，請與圖書館聯絡"></label></div>
-  <div class="row"><label><input type="checkbox" id="setRed"> 逾期列紅字提醒</label><small>勾選後，已逾期（逾期天數為正）的書整列以紅字顯示；不勾選則全部黑字。</small></div>
+  <div class="row"><label><input type="checkbox" id="setRed"> 逾期列紅字提醒</label><label id="redBgLbl" style="display:none"><input type="checkbox" id="setRedBg"> 加上淡紅底色，提醒更明顯（較耗墨水）</label><small>勾選後，已逾期（逾期天數為正）的書整列以紅字顯示；不勾選則全部黑字。紅字提醒勾選後，還可加上淡紅底色。</small></div>
   <div class="row"><small>設定會自動記住；學校名稱會依清冊上的學校分別記住。館員版與學生版的標題都會使用這個學校名稱。</small></div>
 </div>
 <div id="shelf">
@@ -179,7 +180,7 @@ body.previewing #main { display:none; }
    <li><b>館員版催書單</b>：A4 直式，每個班級一張（或數頁），列出全班的書單，方便館員核對。</li>
    <li><b>學生版催書單</b>：A4 橫式，一頁 4 張小單，每位讀者每 4 本書一張，沿框線剪開發給學生。</li>
    <li>按「列印」時請選 A4、縮放 100%；學生版選橫式。也可以選「另存成 PDF」。</li>
-   <li><b>逾期列紅字提醒</b>：勾選後，已逾期的書整列以紅字顯示；預設不勾選（全部黑字）。</li>
+   <li><b>逾期列紅字提醒</b>：勾選後，已逾期的書整列以紅字顯示；預設不勾選（全部黑字）。勾選後可再選「加上淡紅底色」，提醒更明顯但較耗墨水。</li>
   </ul>
 
   <h3>④ 逾期天數怎麼看</h3>
@@ -422,9 +423,15 @@ function loadSettings(d){
 }
 $('#setSchool').oninput = () => { if(!cur) return; const m=schoolMap(); const v=$('#setSchool').value.trim(); if(v && v!==cur.school) m[cur.school]=v; else delete m[cur.school]; store.set('ydSchoolNames',JSON.stringify(m)); };
 $('#setContact').oninput = () => store.set('ydContact', $('#setContact').value.trim());
-const applyRed = () => document.body.classList.toggle('redLate', $('#setRed').checked);
-$('#setRed').checked = store.get('ydRedLate')==='1'; applyRed();                       // 預設不勾選
+const applyRed = () => {
+  const on = $('#setRed').checked;
+  document.body.classList.toggle('redLate', on);
+  $('#redBgLbl').style.display = on ? '' : 'none';                                          // 紅字有勾選才出現底色選項
+  document.body.classList.toggle('redBg', on && $('#setRedBg').checked);
+};
+$('#setRed').checked = store.get('ydRedLate')==='1'; $('#setRedBg').checked = store.get('ydRedBg')==='1'; applyRed();                       // 預設不勾選
 $('#setRed').onchange = () => { store.set('ydRedLate', $('#setRed').checked?'1':'0'); applyRed(); };
+$('#setRedBg').onchange = () => { store.set('ydRedBg', $('#setRedBg').checked?'1':'0'); applyRed(); };
 
 function updateInfo(){
   const d=cur, groups=groupByClass(d), all=d.people.flatMap(p=>p.books), late=all.filter(isLate).length;
