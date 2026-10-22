@@ -14,7 +14,7 @@ body { margin:0; font-family: "Microsoft JhengHei","PingFang TC","Noto Sans TC",
 #bar label.btn.sub { background:#fff; color:#2457c5; border:1px solid #2457c5; }
 #drop:hover, #drop.over { border-color:#2457c5; background:#f2f6ff; color:#2457c5; }
 #info { font-size:14px; color:#444; }
-#drop { cursor:pointer; margin:40px auto; max-width:560px; border:2px dashed #99a; border-radius:12px; padding:48px 20px; text-align:center; color:#667; background:#fff; }
+#drop { cursor:pointer; margin:40px auto; max-width:680px; border:2px dashed #99a; border-radius:12px; padding:48px 20px; text-align:center; color:#667; background:#fff; }
 @media print {
   body { background:#fff; }
   #bar, #drop, #shelf, #settings, #credit { display:none !important; }
@@ -118,7 +118,7 @@ body.previewing #main { display:none; }
   <label class="btn sub" id="addLbl" style="display:none">＋ 加入更多檔案<input id="fileAdd" type="file" accept=".xls,.xlsx" multiple></label>
   <button id="btnOfficer" class="out" disabled>館員版催書單</button>
   <button id="btnStudent" class="out" disabled>學生版催書單</button>
-  <span id="info">請上傳「借書逾期清單」、「逾期通知單-班級」或「預先還書清冊」Excel 檔，可一次選多個（也可直接拖曳到頁面）</span>
+  <span id="info"></span>
   <button id="helpBtn" type="button" title="使用說明" aria-label="使用說明">?</button>
 </div>
 <div id="settings">
@@ -143,7 +143,7 @@ body.previewing #main { display:none; }
     <li>查詢期間請勿關閉那個圖書館視窗。資料只在你的瀏覽器與圖書館網站之間傳遞。</li>
     <li>若書籤列沒顯示：按「複製書籤程式碼」，新增一個書籤，把網址欄貼上程式碼即可。</li></ol></details>
 </div>
-<div id="drop" tabindex="0" role="button">點擊此處選擇檔案（可多選），或把 Excel 檔拖曳到這裡<br><small>檔案只在你的瀏覽器處理，不會上傳</small></div>
+<div id="drop" tabindex="0" role="button">點擊此處選擇檔案，或把 Excel 檔拖曳到這裡<br><small>請上傳「借書逾期清單」、「逾期通知單-班級」或「預先還書清冊」Excel 檔，可一次選多個</small><br><small>檔案只在你的瀏覽器處理，不會上傳</small></div>
 <footer id="credit">程式設計：徐承佑</footer>
 </div>
 
