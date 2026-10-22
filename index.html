@@ -73,7 +73,7 @@ body.previewing #main { display:none; }
 #settings input[type=text] { padding:7px 9px; border:1px solid #99a; border-radius:6px; font-size:14px; }
 #settings #setSchool { width:300px; } #settings #setContact { width:430px; max-width:80vw; }
 #settings small { color:#667; }
-/* ---- 學生版：A4 橫式、一頁 4 張（2×2），每張最多 3 本 ---- */
+/* ---- 學生版：A4 橫式、一頁 4 張（2×2），每張最多 4 本 ---- */
 .sheet { width:285mm; height:197mm; margin:14px auto; background:#fff; box-shadow:0 1px 6px #0003; display:grid; grid-template-columns:1fr 1fr; grid-template-rows:1fr 1fr; gap:5mm;
   font-family:"DFKai-SB","標楷體","BiauKai","Kaiti TC","KaiTi","STKaiti","Noto Serif TC",serif; color:#000; break-after:page; page-break-after:always; overflow:hidden; }
 .ss { border:1.5px solid #000; padding:2mm 1.5mm 1.5mm; display:flex; flex-direction:column; min-height:0; overflow:hidden; }
@@ -82,7 +82,7 @@ body.previewing #main { display:none; }
 .ss .note { margin:0 1mm 1.5mm; font-size:11px; }
 .ss table { width:100%; border-collapse:separate; border-spacing:1px 0; table-layout:fixed; font-size:11.5px; }
 .ss th { -webkit-print-color-adjust:exact; print-color-adjust:exact; background:#c8c8c8; padding:3px 1px; font-weight:normal; text-align:center; white-space:nowrap; }
-.ss td { height:17mm; text-align:center; vertical-align:middle; border-bottom:1px dashed #888; padding:0 1px; word-break:break-all; }
+.ss td { height:16mm; text-align:center; vertical-align:middle; border-bottom:1px dashed #888; padding:0 1px; word-break:break-all; }
 .ss td.sm { font-size:9.5px; line-height:1.3; } .ss td.dt { white-space:nowrap; font-size:11.5px; }
 .ss td.red { color:#e00000; font-size:13px; } .ss td.sh { font-size:10px; } .ss td.sh.none { color:#b00020; }
 .ss .foot { margin-top:auto; border-top:1px dashed #888; padding:1.5mm 1mm 0; font-size:13px; }
@@ -175,7 +175,7 @@ body.previewing #main { display:none; }
   <ul>
    <li><b>通知單設定</b>：可修改學校名稱，以及學生版底部的聯絡資訊（會自動記住）。</li>
    <li><b>館員版催書單</b>：A4 直式，每個班級一張（或數頁），列出全班的書單，方便館員核對。</li>
-   <li><b>學生版催書單</b>：A4 橫式，一頁 4 張小單，每位讀者每 3 本書一張，沿框線剪開發給學生。</li>
+   <li><b>學生版催書單</b>：A4 橫式，一頁 4 張小單，每位讀者每 4 本書一張，沿框線剪開發給學生。</li>
    <li>按「列印」時請選 A4、縮放 100%；學生版選橫式。也可以選「另存成 PDF」。</li>
   </ul>
 
@@ -432,7 +432,7 @@ function render(d) {
   loadSettings(d); updateInfo();
 }
 
-/* ===== 學生版：一位學生每 3 本一張小單，A4 橫式一頁 4 張 ===== */
+/* ===== 學生版：一位學生每 4 本一張小單，A4 橫式一頁 4 張 ===== */
 const stripCode = c => String(c||'').replace(/^\d+\./,'');
 function slipHtml(d, cls, p, books, pdate){
   const body = books.map(b=>`<tr${isOver(b)?' class="late"':''}><td>${esc(b.acc||'')}</td><td>${esc(b.book||'')}</td><td class="sm">${callTd(b.call,b.vol)}</td>${d.shelfOn?shelfTd(b):'<td class="sh"></td>'}${priceTd(d,b)}${hasOut(d)?`<td class="dt">${esc(dash(b.out))}</td>`:''}<td class="dt">${esc(dash(b.due))}</td><td class="${isOver(b)?'red':'c'}">${esc(b.days||'')}</td></tr>`).join('');
@@ -447,7 +447,7 @@ function studentPages(d){
   const pdate = dash(d.pdate) || rocToday(), slips = [];
   groupByClass(d).forEach((rows,cls)=>{
     const byP = new Map(); rows.forEach(({p,b})=>{ if(!byP.has(p)) byP.set(p,[]); byP.get(p).push(b); });
-    byP.forEach((books,p)=>{ for(let i=0;i<books.length;i+=3) slips.push(slipHtml(d,cls,p,books.slice(i,i+3),pdate)); });
+    byP.forEach((books,p)=>{ for(let i=0;i<books.length;i+=4) slips.push(slipHtml(d,cls,p,books.slice(i,i+4),pdate)); });
   });
   const pages = []; for(let i=0;i<slips.length;i+=4) pages.push(`<section class="sheet">${slips.slice(i,i+4).join('')}</section>`);
   return {html:pages.join(''), slips:slips.length, pages:pages.length};
