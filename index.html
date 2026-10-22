@@ -123,7 +123,7 @@ body.previewing #main { display:none; }
 <div id="settings">
   <div class="row"><b>通知單設定</b>
     <label>學校名稱 <input id="setSchool" type="text" placeholder="預設取自清冊上的學校名稱"></label>
-    <label>聯絡資訊（學生版底部） <input id="setContact" type="text" placeholder="例如：若對上列資料有疑義，請與圖書館郭力瑞/02-25219196轉200聯繫"></label></div>
+    <label>聯絡資訊（學生版底部） <input id="setContact" type="text" placeholder="若對上述資料有疑慮，請與圖書館聯絡"></label></div>
   <div class="row"><small>設定會自動記住；學校名稱會依清冊上的學校分別記住。館員版與學生版的標題都會使用這個學校名稱。</small></div>
 </div>
 <div id="shelf">
@@ -411,7 +411,7 @@ let cur=null, parsedList=[], fileNames=[];
 /* ===== 設定（自動記住）===== */
 const store = { get(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }, set(k,v){ try{ localStorage.setItem(k,v); }catch(e){} } };
 const schoolName = d => ($('#setSchool').value||'').trim() || d.school;
-const contactText = () => ($('#setContact').value||'').trim() || '若對上列資料有疑義，請與圖書館聯繫。';
+const contactText = () => ($('#setContact').value||'').trim() || '若對上述資料有疑慮，請與圖書館聯絡';
 function schoolMap(){ try{ return JSON.parse(store.get('ydSchoolNames')||'{}'); }catch(e){ return {}; } }
 function loadSettings(d){
   const m = schoolMap(); $('#setSchool').value = m[d.school] || d.school || '';
