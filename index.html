@@ -58,6 +58,12 @@ body.redLate.redBg .cls tr.late td, body.redLate.redBg .ss tr.late td { backgrou
 body.redLate .cls tr.late td, body.redLate .ss tr.late td { color:#d00000; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
 .cls tr.grp td { font-weight:bold; text-align:left; font-size:13.5px; padding:7px 2px 3px; border-bottom:1.5px solid #000; }
 .cls tr.grp { break-after:avoid; page-break-after:avoid; }
+/* 不分頁連續排列：無灰色分隔帶，班與班之間以淡灰虛線（裁切線）區隔 */
+.cls.cont { margin:0 auto; padding:0 4mm; box-shadow:none; break-after:auto; page-break-after:auto; }
+.cls.cont.first { margin-top:14px; padding-top:6mm; } .cls.cont.last { margin-bottom:14px; padding-bottom:8mm; }
+.cls.cont .rule { border-top:1px dashed #bbb; margin:8mm 0 4mm; }
+.cls.cont.first .rule { border-top-color:transparent; margin-top:0; }
+@media print { .cls.cont, .cls.cont.first, .cls.cont.last { margin:0; padding:0; } }
 #credit { text-align:center; color:#667; font-size:13px; padding:18px 0 28px; }
 
 /* ---- 主畫面 / 預覽畫面切換 ---- */
@@ -405,24 +411,18 @@ const officerRow = (d,{p,b}) => `<tr${isOver(b)?' class="late"':''}>
     ${hasOut(d)?`<td class="dt">${esc(dash(b.out))}</td>`:''}<td class="dt">${esc(dash(b.due))}</td><td class="${isOver(b)?'red':'c'}">${esc(b.days||'')}</td></tr>`;
 const officerHead = d => `<colgroup><col style="width:27mm"><col style="width:20mm"><col><col style="width:15mm"><col style="width:13mm"><col style="width:12mm">${hasOut(d)?'<col style="width:20mm">':''}<col style="width:20mm"><col style="width:17mm"></colgroup>
   <thead><tr><th>讀者編號 姓名</th><th>館藏登錄號</th><th>書名</th><th>索書</th><th>排架</th><th>金額</th>${hasOut(d)?'<th>借閱日期</th>':''}<th>應還日期</th><th>逾期天數</th></tr></thead>`;
-function classPage(d, cls, rows){
+function classPage(d, cls, rows, pos){
   const pdate = dash(d.pdate) || rocToday();
-  return `<section class="cls"><div class="rule"></div>
+  return `<section class="cls${pos?' cont '+pos:''}"><div class="rule"></div>
   <h1>${esc(schoolName(d))} 書籍催還通知單</h1>
   <div class="meta"><span>單位：${esc(cls||'其他讀者')}</span><span>列印時間：${esc(pdate)}</span></div>
   <table>${officerHead(d)}
   <tbody>${rows.map(r=>officerRow(d,r)).join('')}</tbody></table></section>`;
 }
-// 不依班級分頁：所有班級連續排在同一張表，班級以一列標題區隔；表頭在每頁自動重複
+// 不依班級分頁：各班通知單（含標題）首尾相接、不換頁；班與班之間以淡灰虛線作為裁切線
 function mergedPage(d, groups){
-  const pdate = dash(d.pdate) || rocToday(), cols = hasOut(d) ? 9 : 8;
   const names = [...groups.keys()].sort((a,b)=> a===''?1 : b===''?-1 : a.localeCompare(b,'zh-Hant',{numeric:true}));
-  const body = names.map(c=>`<tr class="grp"><td colspan="${cols}">單位：${esc(c||'其他讀者')}</td></tr>`+groups.get(c).map(r=>officerRow(d,r)).join('')).join('');
-  return `<section class="cls"><div class="rule"></div>
-  <h1>${esc(schoolName(d))} 書籍催還通知單</h1>
-  <div class="meta"><span></span><span>列印時間：${esc(pdate)}</span></div>
-  <table>${officerHead(d)}
-  <tbody>${body}</tbody></table></section>`;
+  return names.map((c,i)=>classPage(d,c,groups.get(c), (i===0?'first':'mid')+(i===names.length-1?' last':''))).join('');
 }
 
 let cur=null, parsedList=[], fileNames=[];
