@@ -510,7 +510,8 @@ function paginate(){}
 window.renderFromRows = rows => { parsedList=[parseAny(rows)]; fileNames=['(測試)']; render(mergeData(parsedList)); };
 
 /* ===== 排架號查詢（書籤小工具 + postMessage） ===== */
-const shelfOf = u => { if(!u) return null; const t=String(u).split('/'); return t.length>1 ? t[t.length-1].trim() : ''; };
+// 館藏地欄位有兩種寫法：「圖書館 / 繪-2-6」（取斜線後）與直接寫「繪-3-2」（無斜線）；後者只在像排架號（含數字或連字號）時採用，單純的「圖書館」不當作排架號
+const shelfOf = u => { if(!u) return null; const t=String(u).split('/'), s=t[t.length-1].trim(); return t.length>1 || /[-\d]/.test(s) ? s : ''; };
 function shelfTd(b){
   if (b.shelf===undefined) return '<td class="sh"></td>';
   if (b.shelf===null) return '<td class="sh none">查無</td>';
