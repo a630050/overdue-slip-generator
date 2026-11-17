@@ -134,6 +134,7 @@ body.previewing #main { display:none; }
   <div class="row"><b>通知單設定</b>
     <label>學校名稱 <input id="setSchool" type="text" placeholder="預設取自清冊上的學校名稱"></label>
     <label>聯絡資訊（學生版底部） <input id="setContact" type="text" placeholder="若對上述資料有疑慮，請與圖書館聯絡"></label></div>
+  <div class="row"><label><input type="checkbox" id="setSeat"> 顯示座號</label><small>（報表有座號時才有效：館員版顯示在姓名上方，學生版顯示在姓名前）</small></div>
   <div class="row"><label><input type="checkbox" id="setMerge" checked> 不依班級分頁以節省紙張</label><small>（館員版：各班連續排列，中間不留空白；不勾選則每班一頁）</small></div>
   <div class="row"><label><input type="checkbox" id="setRed"> 逾期列紅字提醒</label><label id="redBgLbl" style="display:none"><input type="checkbox" id="setRedBg"> 加上淡紅底色，提醒更明顯（較耗墨水）</label><small>勾選後，已逾期（逾期天數為正）的書整列以紅字顯示；不勾選則全部黑字。紅字提醒勾選後，還可加上淡紅底色。</small></div>
   <div class="row"><small>設定會自動記住；學校名稱會依清冊上的學校分別記住。館員版與學生版的標題都會使用這個學校名稱。</small></div>
@@ -405,7 +406,7 @@ function groupByClass(d){
   return g;
 }
 const officerRow = (d,{p,b}) => `<tr${isOver(b)?' class="late"':''}>
-    <td>${esc(p.rid)}<br>${esc(p.name||'')}</td>
+    <td>${seatOn(p)?esc(seatOn(p))+'號 ('+esc(p.rid)+')':esc(p.rid)}<br>${esc(p.name||'')}</td>
     <td class="c">${esc(b.acc||'')}</td><td>${esc(b.book||'')}</td>
     <td class="sm">${callTd(b.call,b.vol)}</td>${d.shelfOn?shelfTd(b):'<td class="sh"></td>'}${priceTd(d,b)}
     ${hasOut(d)?`<td class="dt">${esc(dash(b.out))}</td>`:''}<td class="dt">${esc(dash(b.due))}</td><td class="${isOver(b)?'red':'c'}">${esc(b.days||'')}</td></tr>`;
@@ -438,6 +439,8 @@ function loadSettings(d){
 }
 $('#setSchool').oninput = () => { if(!cur) return; const m=schoolMap(); const v=$('#setSchool').value.trim(); if(v && v!==cur.school) m[cur.school]=v; else delete m[cur.school]; store.set('ydSchoolNames',JSON.stringify(m)); };
 $('#setContact').oninput = () => store.set('ydContact', $('#setContact').value.trim());
+const seatOn = p => $('#setSeat').checked ? String(p.seat||'').trim() : '';              // 勾選「顯示座號」且該讀者有座號才回傳
+$('#setSeat').checked = store.get('ydSeat')==='1'; $('#setSeat').onchange = () => store.set('ydSeat', $('#setSeat').checked?'1':'0');
 $('#setMerge').checked = store.get('ydMerge')!=='0';                                    // 預設勾選
 $('#setMerge').onchange = () => store.set('ydMerge', $('#setMerge').checked?'1':'0');
 const applyRed = () => {
@@ -467,7 +470,7 @@ const stripCode = c => String(c||'').replace(/^\d+\./,'');
 function slipHtml(d, cls, p, books, pdate){
   const body = books.map(b=>`<tr${isOver(b)?' class="late"':''}><td>${esc(b.acc||'')}</td><td>${esc(b.book||'')}</td><td class="sm">${callTd(b.call,b.vol)}</td>${d.shelfOn?shelfTd(b):'<td class="sh"></td>'}${priceTd(d,b)}${hasOut(d)?`<td class="dt">${esc(dash(b.out))}</td>`:''}<td class="dt">${esc(dash(b.due))}</td><td class="${isOver(b)?'red':'c'}">${esc(b.days||'')}</td></tr>`).join('');
   return `<div class="ss"><h1>${esc(schoolName(d))} 書籍催還通知單</h1>
-  <div class="meta"><span>${stripCode(cls)?`單位：${esc(stripCode(cls))}（${esc(p.rid)}）`:`讀者編號：${esc(p.rid)}`}　姓名：${esc(p.name||'')}</span><span>列印時間：${esc(pdate)}</span></div>
+  <div class="meta"><span>${stripCode(cls)?`單位：${esc(stripCode(cls))}（${esc(p.rid)}）`:`讀者編號：${esc(p.rid)}`}　姓名：${seatOn(p)?esc(seatOn(p))+'號 ':''}${esc(p.name||'')}</span><span>列印時間：${esc(pdate)}</span></div>
   <table><colgroup><col style="width:19mm"><col><col style="width:14mm"><col style="width:11mm"><col style="width:11mm">${hasOut(d)?'<col style="width:18mm">':''}<col style="width:18mm"><col style="width:13mm"></colgroup>
   <thead><tr><th>館藏登錄號</th><th>書名</th><th>索書</th><th>排架</th><th>金額</th>${hasOut(d)?'<th>借閱日期</th>':''}<th>應還日期</th><th>逾期天數</th></tr></thead>
   <tbody>${body}</tbody></table>
